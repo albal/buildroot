@@ -1,0 +1,8 @@
+config BR2_PACKAGE_TPM_TOOLS
+ bool "tpm-tools"
+ select BR2_PACKAGE_TROUSERS
+ depends on BR2_PACKAGE_OPENSSL
+ help
+   Manpages for the tpm-tools package of TrouSerS.
+
+   http://trousers.sourceforge.net/
