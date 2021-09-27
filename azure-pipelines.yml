@@ -1,0 +1,42 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+
+  name: Azure Pipelines
+
+variables:
+
+  config_name: 'raspberrypi4_64_defconfig'
+
+
+
+steps:
+
+- bash: |
+   # Write your commands here
+   
+   unset SYSTEM
+   make $(config_name)
+   make
+  displayName: 'Bash Script'
+- task: PublishBuildArtifacts@1
+
+  displayName: 'Publish Artifact: sdcard'
+
+  inputs:
+
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/output/images/sdcard.img'
+
+    ArtifactName: sdcard
+
+    StoreAsTar: true
+
+
+
+
