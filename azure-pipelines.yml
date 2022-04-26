@@ -7,36 +7,22 @@ trigger:
 - master
 
 pool:
-
   name: Azure Pipelines
 
 variables:
-
   config_name: 'raspberrypi4_64_defconfig'
 
-
-
-steps:
-
-- bash: |
-   # Write your commands here
-   
-   unset SYSTEM
-   make $(config_name)
-   make
-  displayName: 'Bash Script'
-- task: PublishBuildArtifacts@1
-
-  displayName: 'Publish Artifact: sdcard'
-
-  inputs:
-
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/output/images/sdcard.img'
-
-    ArtifactName: sdcard
-
-    StoreAsTar: true
-
-
-
-
+jobs:
+- job: Build
+  timeoutInMinutes: 10
+  steps:
+  - bash: |
+      # Write your commands here
+      unset SYSTEM
+      make $(config_name)
+      make
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: sdcard.img
+      StoreAsTar: true
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/output/images/sdcard.img'
