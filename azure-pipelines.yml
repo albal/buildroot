@@ -14,7 +14,7 @@ variables:
 
 jobs:
 - job: Build
-  timeoutInMinutes: 10
+  timeoutInMinutes: 720
   steps:
   - bash: |
       # Write your commands here
