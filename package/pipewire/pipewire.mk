@@ -4,13 +4,14 @@
 #
 ################################################################################
 
-PIPEWIRE_VERSION = 0.3.35
+PIPEWIRE_VERSION = 0.3.50
 PIPEWIRE_SOURCE = pipewire-$(PIPEWIRE_VERSION).tar.bz2
 PIPEWIRE_SITE = https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/$(PIPEWIRE_VERSION)
 PIPEWIRE_LICENSE = MIT, LGPL-2.1+ (libspa-alsa), GPL-2.0 (libjackserver)
 PIPEWIRE_LICENSE_FILES = COPYING LICENSE
 PIPEWIRE_INSTALL_STAGING = YES
-PIPEWIRE_DEPENDENCIES = host-pkgconf dbus $(TARGET_NLS_DEPENDENCIES)
+PIPEWIRE_DEPENDENCIES = host-pkgconf $(TARGET_NLS_DEPENDENCIES)
+PIPEWIRE_LDFLAGS = $(TARGET_NLS_LIBS)
 
 PIPEWIRE_CONF_OPTS += \
 	-Ddocs=disabled \
@@ -26,7 +27,17 @@ PIPEWIRE_CONF_OPTS += \
 	-Dtest=disabled \
 	-Dvideoconvert=enabled \
 	-Dvideotestsrc=enabled \
-	-Dvolume=enabled
+	-Dvolume=enabled \
+	-Dsession-managers=[] \
+	-Dlegacy-rtkit=false \
+	-Dlibcanberra=disabled
+
+ifeq ($(BR2_PACKAGE_DBUS),y)
+PIPEWIRE_CONF_OPTS += -Ddbus=enabled
+PIPEWIRE_DEPENDENCIES += dbus
+else
+PIPEWIRE_CONF_OPTS += -Ddbus=disabled
+endif
 
 ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
 PIPEWIRE_CONF_OPTS += -Dudev=enabled
@@ -73,7 +84,7 @@ else
 PIPEWIRE_CONF_OPTS += -Dalsa=disabled -Dpipewire-alsa=disabled
 endif
 
-ifeq ($(BR2_PACKAGE_AVAHI),y)
+ifeq ($(BR2_PACKAGE_AVAHI_LIBAVAHI_CLIENT),y)
 PIPEWIRE_CONF_OPTS += -Davahi=enabled
 PIPEWIRE_DEPENDENCIES += avahi
 else
@@ -101,10 +112,14 @@ else
 PIPEWIRE_CONF_OPTS += -Dffmpeg=disabled
 endif
 
+ifeq ($(BR2_PACKAGE_NCURSES_WCHAR),y)
+PIPEWIRE_DEPENDENCIES += ncurses
+endif
+
 ifeq ($(BR2_PACKAGE_PIPEWIRE_V4L2),y)
-PIPEWIRE_CONF_OPTS += -Dv4l2=enabled
+PIPEWIRE_CONF_OPTS += -Dpipewire-v4l2=enabled -Dv4l2=enabled
 else
-PIPEWIRE_CONF_OPTS += -Dv4l2=disabled
+PIPEWIRE_CONF_OPTS += -Dpipewire-v4l2=disabled -Dv4l2=disabled
 endif
 
 ifeq ($(BR2_PACKAGE_LIBCAMERA)$(BR2_PACKAGE_LIBDRM)$(BR2_PACKAGE_HAS_UDEV),yyy)
@@ -112,6 +127,27 @@ PIPEWIRE_CONF_OPTS += -Dlibcamera=enabled
 PIPEWIRE_DEPENDENCIES += libcamera libdrm
 else
 PIPEWIRE_CONF_OPTS += -Dlibcamera=disabled
+endif
+
+ifeq ($(BR2_PACKAGE_LILV),y)
+PIPEWIRE_CONF_OPTS += -Dlv2=enabled
+PIPEWIRE_DEPENDENCIES += lilv
+else
+PIPEWIRE_CONF_OPTS += -Dlv2=disabled
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBX11),y)
+PIPEWIRE_CONF_OPTS += -Dx11=enabled
+PIPEWIRE_DEPENDENCIES += xlib_libX11
+else
+PIPEWIRE_CONF_OPTS += -Dx11=disabled
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXFIXES),y)
+PIPEWIRE_CONF_OPTS += -Dx11-xfixes=enabled
+PIPEWIRE_DEPENDENCIES += xlib_libXfixes
+else
+PIPEWIRE_CONF_OPTS += -Dx11-xfixes=disabled
 endif
 
 ifeq ($(BR2_PACKAGE_LIBUSB),y)
@@ -142,6 +178,10 @@ else
 PIPEWIRE_CONF_OPTS += -Dlibpulse=disabled
 endif
 
+ifeq ($(BR2_PACKAGE_READLINE),y)
+PIPEWIRE_DEPENDENCIES += readline
+endif
+
 ifeq ($(BR2_PACKAGE_SDL2),y)
 PIPEWIRE_DEPENDENCIES += sdl2
 PIPEWIRE_CONF_OPTS += -Dsdl2=enabled
@@ -156,14 +196,15 @@ else
 PIPEWIRE_CONF_OPTS += -Decho-cancel-webrtc=disabled
 endif
 
-ifeq ($(BR2_PACKAGE_PIPEWIRE_MEDIA_SESSION),y)
-PIPEWIRE_SESSION_MANAGERS_LIST = media-session
+ifeq ($(BR2_PACKAGE_OPENSSL),y)
+PIPEWIRE_CONF_OPTS += -Draop=enabled
+PIPEWIRE_DEPENDENCIES += openssl
+else
+PIPEWIRE_CONF_OPTS += -Draop=disabled
 endif
 
-PIPEWIRE_CONF_OPTS += -Dsession-managers='$(subst $(space),$(comma),$(PIPEWIRE_SESSION_MANAGERS_LIST))'
-
 define PIPEWIRE_USERS
-	pipewire -1 pipewire -1 * - - - PipeWire System Daemon
+	pipewire -1 pipewire -1 * - - audio,video PipeWire System Daemon
 endef
 
 $(eval $(meson-package))
