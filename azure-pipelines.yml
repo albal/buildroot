@@ -25,4 +25,5 @@ jobs:
     inputs:
       ArtifactName: sdcard.img
       StoreAsTar: true
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)/output/images/sdcard.img'
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/output/images/sdcard.img'
+                      
